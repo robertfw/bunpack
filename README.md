@@ -2,6 +2,10 @@
 
 _Because I'm sick and tired of googling the args for unpacking things_
 
+`bunpack` will extract whatever* you throw at it, extracting into a subfolder every time to prevent those annoying "I just spat junk all over my working directory" moments.
+
+_*as long as it's a `tar.gz`, `tar.bz2`, `tar.xz`, or `zip`_
+
 ## Stability
 
 This is about as fresh as it gets and everything is subject to change
