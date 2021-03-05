@@ -20,7 +20,11 @@ on the filename.
 
 ## Dependencies
 
-You should have the following command line tools installed:
+You must have `babashka` installed and available on your `$PATH`. You can get it
+at https://github.com/babashka/babashka
+
+`Bunpack` shells out to perform the actual work, so you should have the following 
+command line tools installed:
 * `tar`
 * `xz`
 * `unzip`
