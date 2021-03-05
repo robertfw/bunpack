@@ -2,31 +2,41 @@
 
 _Because I'm sick and tired of googling the args for unpacking things_
 
-## Stability
+🐰
 
-This is about as fresh as it gets and everything is subject to change
+## Usage
 
+`bunpack <file> [<destination>]`
 
-## Suggested Installation
+Bunpack will select the correct decompression tool to use and ensure that your 
+unpacked files will be in their own directory, because if there's one thing more
+annoying that having to google the tar command args again, it's unpacking dozens
+of files into your current directory.
 
-In a $PATH accessible location, create a file `bunpack` along these lines
+Without passing `<destination>`, `bunpack` will create a target directory based
+on the filename.
 
-```
-#!/bin/sh
-bb -f /path/to/bunpack/bunpack.clj "$@"
-```
+## Dependencies
 
-And make it executable
+You should have the following command line tools installed:
+* `tar`
+* `xz`
+* `unzip`
 
-```
-chmod +x bunpack
-```
+## Installation
+
+Get `bunpack.clj` somewhere on your `$PATH`. I would recommend cloning the 
+repository and creating a link but whatever floats your boat.
+
+## Contributing
+
+PRs welcome! Please update tests if adding a new unpacker.
 
 ## License
 
 MIT License
 
-Copyright (c) 2001 Robert Warner
+Copyright (c) 2021 Robert Warner
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

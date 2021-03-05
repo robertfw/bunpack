@@ -1,3 +1,16 @@
+#!/usr/bin/env bb
+(def usage "Bunpack: never have to remember how to unpack your buns
+
+Unpacks file to destination. If destination not provided, will use file basename
+
+Usage:
+  bunpack <file> [<destination>] [options]
+
+Options:
+  -d --dry      Dry run, output commands that would be run
+  -v --verbose  Show output from commands run
+  -h --help     Show this screen. ")
+
 (require '[babashka.classpath :refer [add-classpath]]
          '[clojure.java.shell :refer [sh]]
          '[clojure.string :as str])
@@ -8,17 +21,6 @@
 (def cp (-> (sh "clojure" "-Spath" "-Sdeps" (str deps)) :out str/trim))
 (add-classpath cp)
 (require '[docopt.core :as docopt])
-
-(def usage "Bunpack: never have to remember how to unpack your buns
-
-Usage:
-  bunpack <file>
-  bunpack -t TARGET_PATH <file>
-  bunpack -h | --help
-
-Options:
-  -h --help                        Show this screen.
-  -t TARGET_PATH --to=TARGET_PATH  Extract to given path")
 
 (defn strip-suffix [file suffix]
   (subs file 0 (- (count file) (count suffix))))
@@ -46,26 +48,48 @@ Options:
     (binding [*out* *err*]
       (println output))))
 
-(defn run [{file "<file>", destination "--to"}]
-  (let [get-cmd (fn [extractor-fn] (fn [_] (extractor-fn file destination)))
-        commands (condp #(str/ends-with? %2 %1) file
-                   ".tar.gz" :>> (get-cmd tar-gz)
-                   ".tar.xz" :>> (get-cmd tar-xz)
-                   ".tar.bz2" :>> (get-cmd tar-bz2)
-                   ".zip" :>> (get-cmd zip)
-                   ::unsupported)]
-    (if (= commands ::unsupported)
-      (do
-        (printerr "File format not supported")
-        (System/exit 1))
-      (doseq [command commands
-              :let [{:keys [exit out err]} (apply sh (filter some? command))]]
-        (when (< 0 exit)
-          (printerr (str "Error running '" (str/join " " command)
-                         "', exited with status " exit "\n" err))
-          (System/exit exit)))))
-  (System/exit 0))
+(defn printout [output]
+  (when-not (str/blank? output)
+    (println output)))
 
-(docopt/docopt usage *command-line-args* (fn [opts] (if (get opts "--help")
-                                                      (println usage)
-                                                      (run opts))))
+(defn get-commands [file destination]
+  (letfn [(get-cmds-from [cmd-fn]
+            (fn [_] (cmd-fn file destination)))]
+    (condp #(str/ends-with? %2 %1) file
+      ".tar.gz" :>> (get-cmds-from tar-gz)
+      ".tar.xz" :>> (get-cmds-from tar-xz)
+      ".tar.bz2" :>> (get-cmds-from tar-bz2)
+      ".zip" :>> (get-cmds-from zip)
+      ::unsupported)))
+
+;; TODO: move System/exit calls into wrapper to make this usable as a pod?
+(defn bunpack [file destination dry verbose]
+   (let [commands (get-commands file destination)]
+     (cond
+       (= commands ::unsupported)
+       (do
+         (printerr "File format not supported")
+         (System/exit 1))
+
+       (true? dry)
+       (doseq [command commands]
+         (printout (str/join " " command)))
+
+       :else
+       (doseq [command commands
+               :let [{:keys [exit out err]} (apply sh (filter some? command))
+                     cmd-str (str/join " " command)]]
+         (when verbose
+           (printout cmd-str)
+           (printout out))
+         (when (< 0 exit)
+           (printerr (str "Error running '" cmd-str
+                          "', exited with status " exit "\n" err))
+           (System/exit exit))))))
+
+(docopt/docopt usage *command-line-args*
+               (fn [{file "<file>", destination "<destination>",
+                     dry "--dry", help "--help", verbose "--verbose"}]
+                 (if help
+                   (println usage)
+                   (bunpack file destination dry verbose))))
