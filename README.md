@@ -12,7 +12,7 @@ _*as long as it's a `tar.gz`, `tar.bz2`, `tar.xz`, or `zip`_
 
 Bunpack will select the correct decompression tool to use and ensure that your 
 unpacked files will be in their own directory, because if there's one thing more
-annoying that having to google the tar command args again, it's unpacking dozens
+annoying than having to google the tar command args again, it's unpacking dozens
 of files into your current directory.
 
 Without passing `<destination>`, `bunpack` will create a target directory based
